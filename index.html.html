@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Enfoque Personal</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --color-background-primary:#ffffff;
+  --color-background-secondary:#f5f5f4;
+  --color-background-tertiary:#efefed;
+  --color-background-info:#e6f1fb;
+  --color-background-success:#eaf3de;
+  --color-background-warning:#faeeda;
+  --color-background-danger:#fcebeb;
+  --color-text-primary:#1a1a1a;
+  --color-text-secondary:#6b6b6b;
+  --color-text-tertiary:#a0a0a0;
+  --color-text-info:#185fa5;
+  --color-text-success:#3b6d11;
+  --color-text-warning:#854f0b;
+  --color-text-danger:#a32d2d;
+  --color-border-tertiary:rgba(0,0,0,0.1);
+  --color-border-secondary:rgba(0,0,0,0.18);
+  --border-radius-md:8px;
+  --border-radius-lg:12px;
+  --font-sans:system-ui,-apple-system,sans-serif;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --color-background-primary:#1c1c1c;
+    --color-background-secondary:#262626;
+    --color-background-tertiary:#111111;
+    --color-background-info:#042c53;
+    --color-background-success:#173404;
+    --color-background-warning:#412402;
+    --color-background-danger:#501313;
+    --color-text-primary:#f0f0f0;
+    --color-text-secondary:#a0a0a0;
+    --color-text-tertiary:#606060;
+    --color-text-info:#85b7eb;
+    --color-text-success:#97c459;
+    --color-text-warning:#ef9f27;
+    --color-text-danger:#f09595;
+    --color-border-tertiary:rgba(255,255,255,0.1);
+    --color-border-secondary:rgba(255,255,255,0.18);
+  }
+}
+body{font-family:var(--font-sans);color:var(--color-text-primary);background:var(--color-background-tertiary);min-height:100vh;padding:1rem}
+.app{max-width:900px;margin:0 auto}
+.app-header{text-align:center;padding:1.5rem 0 1rem;margin-bottom:1rem}
+.app-header h1{font-size:22px;font-weight:500;color:var(--color-text-primary)}
+.app-header p{font-size:13px;color:var(--color-text-secondary);margin-top:4px}
+.nav{display:flex;gap:8px;margin-bottom:1.5rem;border-bottom:0.5px solid var(--color-border-tertiary);padding-bottom:12px;flex-wrap:wrap}
+.nav-btn{padding:6px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:transparent;color:var(--color-text-secondary);cursor:pointer;font-size:14px;transition:all .15s}
+.nav-btn.active{background:var(--color-background-secondary);color:var(--color-text-primary);border-color:var(--color-border-secondary);font-weight:500}
+.nav-btn:hover:not(.active){background:var(--color-background-secondary)}
+.section{display:none}
+.section.active{display:block}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1rem}
+.metric-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:1rem;text-align:center}
+.metric-label{font-size:13px;color:var(--color-text-secondary);margin-bottom:4px}
+.metric-value{font-size:22px;font-weight:500}
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:1rem}
+.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:1rem}
+.badge{display:inline-block;padding:2px 8px;border-radius:var(--border-radius-md);font-size:11px;font-weight:500}
+.badge-success{background:var(--color-background-success);color:var(--color-text-success)}
+.badge-warning{background:var(--color-background-warning);color:var(--color-text-warning)}
+.badge-danger{background:var(--color-background-danger);color:var(--color-text-danger)}
+.badge-info{background:var(--color-background-info);color:var(--color-text-info)}
+input[type=text],input[type=number],select{padding:7px 10px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);font-size:14px;font-family:var(--font-sans)}
+input[type=text]:focus,input[type=number]:focus,select:focus{outline:none;border-color:var(--color-border-secondary)}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.btn{padding:7px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-primary);cursor:pointer;font-size:13px;font-weight:500;font-family:var(--font-sans)}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:var(--color-text-primary);color:var(--color-background-primary);border-color:transparent}
+.btn-primary:hover{opacity:.85}
+.btn-sm{padding:4px 10px;font-size:12px}
+.task-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.task-item:last-child{border-bottom:none}
+.task-check{width:18px;height:18px;min-width:18px;border-radius:50%;border:1.5px solid var(--color-border-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .15s}
+.task-check.done{background:#1D9E75;border-color:#1D9E75}
+.task-text{flex:1;font-size:14px;line-height:1.5}
+.task-text.done{text-decoration:line-through;color:var(--color-text-tertiary)}
+.task-meta{font-size:12px;color:var(--color-text-tertiary);margin-top:2px}
+.habit-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.habit-row:last-child{border-bottom:none}
+.habit-name{flex:1;font-size:14px}
+.habit-dots{display:flex;gap:5px}
+.dot{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--color-border-secondary);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;font-size:10px;color:transparent}
+.dot.done{background:#1D9E75;border-color:#1D9E75;color:#fff}
+.finance-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:14px;flex-wrap:wrap}
+.finance-row:last-child{border-bottom:none}
+.delete-btn{color:var(--color-text-tertiary);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;margin-left:auto;background:none;border:none;font-family:var(--font-sans)}
+.delete-btn:hover{color:var(--color-text-danger)}
+.progress-bar-bg{height:6px;background:var(--color-background-secondary);border-radius:3px;margin-top:6px;overflow:hidden}
+.progress-bar{height:100%;border-radius:3px;transition:width .3s}
+.section-title{font-size:16px;font-weight:500;margin-bottom:12px;color:var(--color-text-primary)}
+.empty-state{text-align:center;padding:2rem;color:var(--color-text-tertiary);font-size:14px}
+.focus-timer{text-align:center;padding:1.5rem 0}
+.timer-display{font-size:52px;font-weight:500;letter-spacing:2px;margin:1rem 0;font-variant-numeric:tabular-nums}
+.timer-btns{display:flex;gap:10px;justify-content:center;margin-top:1rem}
+.priority-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;flex-shrink:0;margin-top:5px}
+.p-alta{background:#E24B4A}
+.p-media{background:#EF9F27}
+.p-baja{background:#639922}
+@media(max-width:600px){
+  .grid-3{grid-template-columns:1fr}
+  .grid-2{grid-template-columns:1fr}
+  .row{flex-direction:column;align-items:stretch}
+  .row input,.row select,.row button{width:100%}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="app-header">
+    <h1>Sistema de Enfoque Personal</h1>
+    <p>Tareas · Hábitos · Finanzas · Foco</p>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="switchTab('resumen',this)">Resumen</button>
+    <button class="nav-btn" onclick="switchTab('tareas',this)">Tareas</button>
+    <button class="nav-btn" onclick="switchTab('habitos',this)">Hábitos</button>
+    <button class="nav-btn" onclick="switchTab('finanzas',this)">Finanzas</button>
+    <button class="nav-btn" onclick="switchTab('foco',this)">Foco</button>
+  </div>
+
+  <!-- RESUMEN -->
+  <div id="tab-resumen" class="section active">
+    <div class="grid-3">
+      <div class="metric-card">
+        <div class="metric-label">Tareas hoy</div>
+        <div class="metric-value" id="m-tareas">0/0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Hábitos hoy</div>
+        <div class="metric-value" id="m-habitos">0/0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Balance mes</div>
+        <div class="metric-value" id="m-balance">$0</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Tareas pendientes</div>
+      <div id="resumen-tareas"><div class="empty-state">No hay tareas pendientes</div></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Hábitos de hoy</div>
+      <div id="resumen-habitos"><div class="empty-state">Agrega hábitos para verlos aquí</div></div>
+    </div>
+  </div>
+
+  <!-- TAREAS -->
+  <div id="tab-tareas" class="section">
+    <div class="card">
+      <div class="section-title">Nueva tarea</div>
+      <div class="row">
+        <input type="text" id="task-input" placeholder="¿Qué tenés que hacer?" style="flex:1;min-width:160px" onkeydown="if(event.key==='Enter')addTask()">
+        <select id="task-priority" style="width:110px">
+          <option value="alta">Alta</option>
+          <option value="media" selected>Media</option>
+          <option value="baja">Baja</option>
+        </select>
+        <select id="task-cat" style="width:110px">
+          <option value="personal">Personal</option>
+          <option value="trabajo">Trabajo</option>
+          <option value="salud">Salud</option>
+          <option value="otro">Otro</option>
+        </select>
+        <button class="btn btn-primary" onclick="addTask()">Agregar</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="section-title" style="margin:0">Mis tareas</div>
+        <select id="task-filter" onchange="renderTasks()" style="width:120px;font-size:13px">
+          <option value="todas">Todas</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="hecha">Completadas</option>
+        </select>
+      </div>
+      <div id="task-list"><div class="empty-state">Agrega tu primera tarea</div></div>
+    </div>
+  </div>
+
+  <!-- HÁBITOS -->
+  <div id="tab-habitos" class="section">
+    <div class="card">
+      <div class="section-title">Nuevo hábito</div>
+      <div class="row">
+        <input type="text" id="habit-input" placeholder="Nombre del hábito (ej: Meditar 10min)" style="flex:1;min-width:160px" onkeydown="if(event.key==='Enter')addHabit()">
+        <select id="habit-icon" style="width:90px">
+          <option>💪</option><option>📚</option><option>🧘</option><option>💧</option><option>🏃</option><option>✍️</option><option>🥗</option><option>😴</option>
+        </select>
+        <button class="btn btn-primary" onclick="addHabit()">Agregar</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="section-title" style="margin:0">Seguimiento semanal</div>
+        <span style="font-size:12px;color:var(--color-text-tertiary)" id="week-label"></span>
+      </div>
+      <div style="display:flex;gap:5px;justify-content:flex-end;margin-bottom:8px;padding-right:28px" id="day-headers"></div>
+      <div id="habit-list"><div class="empty-state">Agrega tu primer hábito</div></div>
+    </div>
+  </div>
+
+  <!-- FINANZAS -->
+  <div id="tab-finanzas" class="section">
+    <div class="grid-2">
+      <div class="metric-card">
+        <div class="metric-label">Ingresos del mes</div>
+        <div class="metric-value" style="color:var(--color-text-success)" id="f-ingresos">$0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Gastos del mes</div>
+        <div class="metric-value" style="color:var(--color-text-danger)" id="f-gastos">$0</div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:.75rem">
+      <div class="metric-label">Balance</div>
+      <div style="font-size:28px;font-weight:500;margin:4px 0" id="f-balance-big">$0</div>
+      <div class="progress-bar-bg"><div class="progress-bar" id="f-bar" style="background:#1D9E75;width:0%"></div></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Nuevo movimiento</div>
+      <div class="row">
+        <input type="text" id="fin-desc" placeholder="Descripción" style="flex:1;min-width:120px" onkeydown="if(event.key==='Enter')addFinance()">
+        <input type="number" id="fin-amount" placeholder="Monto" style="width:110px" onkeydown="if(event.key==='Enter')addFinance()">
+        <select id="fin-type" style="width:110px">
+          <option value="ingreso">Ingreso</option>
+          <option value="gasto">Gasto</option>
+        </select>
+        <select id="fin-cat" style="width:110px">
+          <option>Sueldo</option><option>Comida</option><option>Transporte</option><option>Salud</option><option>Ocio</option><option>Servicios</option><option>Otro</option>
+        </select>
+        <button class="btn btn-primary" onclick="addFinance()">+</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Movimientos</div>
+      <div id="finance-list"><div class="empty-state">Sin movimientos registrados</div></div>
+    </div>
+  </div>
+
+  <!-- FOCO -->
+  <div id="tab-foco" class="section">
+    <div class="card">
+      <div class="focus-timer">
+        <div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:4px" id="timer-mode">Sesión de enfoque</div>
+        <div class="timer-display" id="timer-display">25:00</div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="setTimer(25,'Sesión de enfoque')">25 min</button>
+          <button class="btn btn-sm" onclick="setTimer(50,'Sesión larga')">50 min</button>
+          <button class="btn btn-sm" onclick="setTimer(5,'Descanso corto')">5 min</button>
+          <button class="btn btn-sm" onclick="setTimer(15,'Descanso largo')">15 min</button>
+        </div>
+        <div class="timer-btns">
+          <button class="btn btn-primary" id="timer-start-btn" onclick="toggleTimer()">Iniciar</button>
+          <button class="btn" onclick="resetTimer()">Reiniciar</button>
+        </div>
+        <div style="margin-top:1.5rem;font-size:13px;color:var(--color-text-tertiary)" id="sessions-today">Sesiones hoy: 0</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Tarea en foco</div>
+      <div style="font-size:14px;color:var(--color-text-secondary);margin-bottom:10px">Elegí en qué vas a trabajar ahora:</div>
+      <div id="focus-task-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var state={
+  tasks:JSON.parse(localStorage.getItem('ef_tasks')||'[]'),
+  habits:JSON.parse(localStorage.getItem('ef_habits')||'[]'),
+  habitLog:JSON.parse(localStorage.getItem('ef_habitlog')||'{}'),
+  finances:JSON.parse(localStorage.getItem('ef_finances')||'[]'),
+  sessions:parseInt(localStorage.getItem('ef_sessions')||'0'),
+  focusTask:null
+};
+var timerInterval=null,timerSeconds=25*60,timerRunning=false,timerTotal=25*60;
+
+function save(){
+  localStorage.setItem('ef_tasks',JSON.stringify(state.tasks));
+  localStorage.setItem('ef_habits',JSON.stringify(state.habits));
+  localStorage.setItem('ef_habitlog',JSON.stringify(state.habitLog));
+  localStorage.setItem('ef_finances',JSON.stringify(state.finances));
+  localStorage.setItem('ef_sessions',state.sessions);
+}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2)}
+function today(){return new Date().toISOString().slice(0,10)}
+
+function switchTab(t,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  btn.classList.add('active');
+  if(t==='resumen')renderResumen();
+  if(t==='tareas')renderTasks();
+  if(t==='habitos')renderHabits();
+  if(t==='finanzas')renderFinances();
+  if(t==='foco')renderFocusTasks();
+}
+
+function addTask(){
+  var v=document.getElementById('task-input').value.trim();if(!v)return;
+  state.tasks.push({id:uid(),text:v,priority:document.getElementById('task-priority').value,cat:document.getElementById('task-cat').value,done:false,date:today()});
+  document.getElementById('task-input').value='';save();renderTasks();renderResumen();
+}
+function toggleTask(id){var t=state.tasks.find(x=>x.id===id);if(t)t.done=!t.done;save();renderTasks();renderResumen();}
+function deleteTask(id){state.tasks=state.tasks.filter(x=>x.id!==id);save();renderTasks();renderResumen();}
+function renderTasks(){
+  var f=document.getElementById('task-filter').value;
+  var list=state.tasks.filter(t=>f==='todas'?true:f==='hecha'?t.done:!t.done);
+  list.sort((a,b)=>{var o={alta:0,media:1,baja:2};return o[a.priority]-o[b.priority]});
+  var el=document.getElementById('task-list');
+  if(!list.length){el.innerHTML='<div class="empty-state">Sin tareas aquí</div>';return}
+  el.innerHTML=list.map(t=>`
+    <div class="task-item">
+      <div class="priority-dot ${t.priority==='alta'?'p-alta':t.priority==='media'?'p-media':'p-baja'}"></div>
+      <div class="task-check ${t.done?'done':''}" onclick="toggleTask('${t.id}')">
+        ${t.done?'<svg width="10" height="8" viewBox="0 0 10 8"><polyline points="1,4 4,7 9,1" stroke="white" stroke-width="1.5" fill="none"/></svg>':''}
+      </div>
+      <div style="flex:1">
+        <div class="task-text ${t.done?'done':''}">${t.text}</div>
+        <div class="task-meta"><span class="badge badge-${t.priority==='alta'?'danger':t.priority==='media'?'warning':'success'}">${t.priority}</span> <span style="margin-left:4px">${t.cat}</span></div>
+      </div>
+      <button class="delete-btn" onclick="deleteTask('${t.id}')">×</button>
+    </div>`).join('');
+}
+
+var DAYS=['D','L','M','X','J','V','S'];
+function getWeekDates(){
+  var d=new Date(),day=d.getDay(),dates=[];
+  for(var i=0;i<7;i++){var nd=new Date(d);nd.setDate(d.getDate()-day+i);dates.push(nd.toISOString().slice(0,10))}
+  return dates;
+}
+function addHabit(){
+  var v=document.getElementById('habit-input').value.trim();if(!v)return;
+  state.habits.push({id:uid(),name:v,icon:document.getElementById('habit-icon').value});
+  document.getElementById('habit-input').value='';save();renderHabits();renderResumen();
+}
+function toggleHabit(hid,date){
+  var key=hid+'_'+date;state.habitLog[key]=!state.habitLog[key];save();renderHabits();renderResumen();
+}
+function deleteHabit(id){state.habits=state.habits.filter(h=>h.id!==id);save();renderHabits();renderResumen();}
+function renderHabits(){
+  var week=getWeekDates(),td=today();
+  var hd=document.getElementById('day-headers');
+  hd.innerHTML=week.map(d=>`<div style="width:22px;text-align:center;font-size:11px;color:${d===td?'var(--color-text-primary)':'var(--color-text-tertiary)'};font-weight:${d===td?'500':'400'}">${DAYS[new Date(d+'T12:00').getDay()]}</div>`).join('');
+  var el=document.getElementById('habit-list');
+  if(!state.habits.length){el.innerHTML='<div class="empty-state">Agrega tu primer hábito</div>';return}
+  el.innerHTML=state.habits.map(h=>`
+    <div class="habit-row">
+      <span style="font-size:15px">${h.icon}</span>
+      <div class="habit-name">${h.name}</div>
+      <div class="habit-dots">${week.map(d=>`<div class="dot ${state.habitLog[h.id+'_'+d]?'done':''}" onclick="toggleHabit('${h.id}','${d}')">✓</div>`).join('')}</div>
+      <button class="delete-btn" onclick="deleteHabit('${h.id}')">×</button>
+    </div>`).join('');
+  document.getElementById('week-label').textContent='Sem. '+week[0].slice(5)+' – '+week[6].slice(5);
+}
+
+function addFinance(){
+  var desc=document.getElementById('fin-desc').value.trim();
+  var amt=parseFloat(document.getElementById('fin-amount').value);
+  if(!desc||isNaN(amt)||amt<=0)return;
+  state.finances.push({id:uid(),desc,amount:amt,type:document.getElementById('fin-type').value,cat:document.getElementById('fin-cat').value,date:today()});
+  document.getElementById('fin-desc').value='';document.getElementById('fin-amount').value='';
+  save();renderFinances();renderResumen();
+}
+function deleteFinance(id){state.finances=state.finances.filter(f=>f.id!==id);save();renderFinances();renderResumen();}
+function renderFinances(){
+  var now=new Date();
+  var mes=state.finances.filter(f=>{var d=new Date(f.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()});
+  var ing=mes.filter(f=>f.type==='ingreso').reduce((a,b)=>a+b.amount,0);
+  var gas=mes.filter(f=>f.type==='gasto').reduce((a,b)=>a+b.amount,0);
+  var bal=ing-gas;
+  var fmt=v=>'$'+Math.round(v).toLocaleString('es-AR');
+  document.getElementById('f-ingresos').textContent=fmt(ing);
+  document.getElementById('f-gastos').textContent=fmt(gas);
+  document.getElementById('f-balance-big').textContent=fmt(bal);
+  document.getElementById('f-balance-big').style.color=bal>=0?'var(--color-text-success)':'var(--color-text-danger)';
+  var pct=ing>0?Math.min(100,Math.round(gas/ing*100)):0;
+  document.getElementById('f-bar').style.width=pct+'%';
+  document.getElementById('f-bar').style.background=pct>80?'#E24B4A':pct>60?'#EF9F27':'#1D9E75';
+  var el=document.getElementById('finance-list');
+  var all=[...state.finances].sort((a,b)=>b.date.localeCompare(a.date));
+  if(!all.length){el.innerHTML='<div class="empty-state">Sin movimientos</div>';return}
+  el.innerHTML=all.slice(0,30).map(f=>`
+    <div class="finance-row">
+      <span style="font-size:13px;color:var(--color-text-secondary);min-width:55px">${f.date.slice(5)}</span>
+      <span style="flex:1">${f.desc}</span>
+      <span class="badge badge-${f.type==='ingreso'?'success':'danger'}" style="margin-right:6px">${f.cat}</span>
+      <span style="font-weight:500;color:${f.type==='ingreso'?'var(--color-text-success)':'var(--color-text-danger)'}">${f.type==='ingreso'?'+':'-'}$${f.amount.toLocaleString('es-AR')}</span>
+      <button class="delete-btn" onclick="deleteFinance('${f.id}')">×</button>
+    </div>`).join('');
+}
+
+function setTimer(min,label){resetTimer();timerTotal=timerSeconds=min*60;document.getElementById('timer-mode').textContent=label;updateTimerDisplay();}
+function updateTimerDisplay(){
+  var m=Math.floor(timerSeconds/60).toString().padStart(2,'0');
+  var s=(timerSeconds%60).toString().padStart(2,'0');
+  document.getElementById('timer-display').textContent=m+':'+s;
+  document.getElementById('sessions-today').textContent='Sesiones hoy: '+state.sessions;
+}
+function toggleTimer(){
+  if(timerRunning){
+    clearInterval(timerInterval);timerRunning=false;
+    document.getElementById('timer-start-btn').textContent='Iniciar';
+  } else {
+    timerRunning=true;document.getElementById('timer-start-btn').textContent='Pausar';
+    timerInterval=setInterval(()=>{
+      timerSeconds--;
+      if(timerSeconds<=0){
+        clearInterval(timerInterval);timerRunning=false;state.sessions++;save();
+        document.getElementById('timer-start-btn').textContent='Iniciar';
+        timerSeconds=0;updateTimerDisplay();
+        alert('Sesión completada! Tomá un descanso.');
+      }
+      updateTimerDisplay();
+    },1000);
+  }
+}
+function resetTimer(){clearInterval(timerInterval);timerRunning=false;timerSeconds=timerTotal;document.getElementById('timer-start-btn').textContent='Iniciar';updateTimerDisplay();}
+function renderFocusTasks(){
+  var pending=state.tasks.filter(t=>!t.done);
+  var el=document.getElementById('focus-task-list');
+  if(!pending.length){el.innerHTML='<div class="empty-state">No hay tareas pendientes</div>';return}
+  el.innerHTML=pending.map(t=>`
+    <div class="task-item" style="cursor:pointer" onclick="selectFocusTask('${t.id}',this)">
+      <div class="priority-dot ${t.priority==='alta'?'p-alta':t.priority==='media'?'p-media':'p-baja'}"></div>
+      <div style="flex:1;font-size:14px">${t.text}</div>
+      <span class="badge badge-${t.priority==='alta'?'danger':t.priority==='media'?'warning':'success'}">${t.priority}</span>
+    </div>`).join('');
+}
+function selectFocusTask(id,el){
+  state.focusTask=id;
+  var t=state.tasks.find(x=>x.id===id);
+  if(t)document.getElementById('timer-mode').textContent='Trabajando en: '+t.text.slice(0,40);
+  document.querySelectorAll('#focus-task-list .task-item').forEach(e=>e.style.background='transparent');
+  el.style.background='var(--color-background-secondary)';
+}
+
+function renderResumen(){
+  var td=today();
+  var total=state.tasks.length,done=state.tasks.filter(t=>t.done).length;
+  document.getElementById('m-tareas').textContent=done+'/'+total;
+  var hTotal=state.habits.length,hDone=state.habits.filter(h=>state.habitLog[h.id+'_'+td]).length;
+  document.getElementById('m-habitos').textContent=hDone+'/'+hTotal;
+  var now=new Date();
+  var mes=state.finances.filter(f=>{var d=new Date(f.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()});
+  var ing=mes.filter(f=>f.type==='ingreso').reduce((a,b)=>a+b.amount,0);
+  var gas=mes.filter(f=>f.type==='gasto').reduce((a,b)=>a+b.amount,0);
+  var bal=ing-gas;
+  document.getElementById('m-balance').textContent=(bal>=0?'+':'')+('$'+Math.round(bal).toLocaleString('es-AR'));
+  document.getElementById('m-balance').style.color=bal>=0?'var(--color-text-success)':'var(--color-text-danger)';
+  var pending=state.tasks.filter(t=>!t.done).slice(0,4);
+  var rt=document.getElementById('resumen-tareas');
+  rt.innerHTML=pending.length?pending.map(t=>`<div class="task-item"><div class="priority-dot ${t.priority==='alta'?'p-alta':t.priority==='media'?'p-media':'p-baja'}"></div><div class="task-text">${t.text}</div><span class="badge badge-${t.priority==='alta'?'danger':t.priority==='media'?'warning':'success'}">${t.priority}</span></div>`).join(''):'<div class="empty-state">Todo al día!</div>';
+  var rh=document.getElementById('resumen-habitos');
+  rh.innerHTML=state.habits.length?state.habits.map(h=>{
+    var done=state.habitLog[h.id+'_'+td];
+    return`<div class="habit-row"><span style="font-size:14px;margin-right:4px">${h.icon}</span><div class="habit-name">${h.name}</div><span class="badge ${done?'badge-success':'badge-warning'}">${done?'Listo':'Pendiente'}</span></div>`
+  }).join(''):'<div class="empty-state">Agrega hábitos para verlos aquí</div>';
+}
+
+renderResumen();renderHabits();updateTimerDisplay();
+</script>
+</body>
+</html>
